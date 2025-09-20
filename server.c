@@ -1,6 +1,8 @@
-#define SIZE 4096
+#define SIZE (4096*4)
 #define AF_INNET 2
 #define SOCKET_STREAM 1
+#define SOL_SOCKET 1
+#define SO_REUSEADDR 2
 
 int sendToFd(int output_fd, int input_fd, int size);
 int openPath(char* filePath);
@@ -132,24 +134,33 @@ int makeSocket(int domain, int type, int protocol){
     "syscall"
     );
 }
+void setSocketOption(int fd, int level, int optname, const void *optval, int optlen) {
+    __asm__ volatile (
+        "mov $54, %rax\n"   //syscall for setsockopt
+        "syscall"
+    );
+}
 
 int main(void){
     char buffer[SIZE];
-
-    print("Hello, World!\n");
+    int opt = 1;
+    print("Starting Server \n");
 
     int socket_fd = makeSocket(AF_INNET, SOCKET_STREAM, 0);
     if (socket_fd < 0) return socket_fd;
-    
     struct sockaddress_in addr = {AF_INNET, 0x2823, 0};
+
+    
+    setSocketOption(socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
     if(bindSocket(socket_fd, &addr, sizeof(addr)) < 0) {
-        print("failed to bind to socket.");
+        print("failed to bind to socket.\n");
         return -1;
     }
-    listenPort(socket_fd, 2);
+    listenPort(socket_fd, 5);
     while(1){
         int client_fd = acceptRequest(socket_fd, 0, 0);
         receive(client_fd, buffer, SIZE);
+        print(buffer);
         int ret_fd = serveFile(buffer, client_fd);
 
         print("Sent a file!\n");
