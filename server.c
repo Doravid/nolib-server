@@ -137,7 +137,18 @@ void setSocketOption(int fd, int level, int optname, const void *optval, int opt
 int serveFile(char* buffer, int client_fd){
     char* file = buffer + 5; 
     *firstPointerToChar(file, ' ') = 0;
-    int opened_file_fd = openPath(file);
+    int opened_file_fd;
+    if(sizeOfString(file) == 0) {
+        file = "index.html";
+        opened_file_fd = openPath("index.html");
+    }
+    else{
+        opened_file_fd = openPath(file);
+        if (opened_file_fd < 1) {
+            file = "404.html";
+            opened_file_fd = openPath("404.html");
+        }
+    }
     if(isHtmlFile(file)){
         char* header = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
         writeToFd(client_fd, header, sizeOfString(header)); 
@@ -153,7 +164,7 @@ int serveFile(char* buffer, int client_fd){
 int main(void){
     char buffer[SIZE];
     int opt = 1;
-    print("Starting Server \n");
+    print("Starting Server\n");
 
     int socket_fd = makeSocket(AF_INNET, SOCKET_STREAM, 0);
     if (socket_fd < 0) return socket_fd;
@@ -170,8 +181,8 @@ int main(void){
     while(1){
         int client_fd = acceptRequest(socket_fd, 0, 0);
         receive(client_fd, buffer, SIZE);
+        print(buffer);
         int ret_fd = serveFile(buffer, client_fd);
-
         print("Sent a file!\n");
         closeFd(ret_fd);
         closeFd(client_fd);
