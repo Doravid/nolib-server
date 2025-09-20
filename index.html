@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello World</title>
+    <!-- Google Fonts for a nice typeface -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap" rel="stylesheet">
+    <!-- All styles are now in this block -->
+    <style>
+        /* Basic body reset and font settings */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Container with the animated gradient background */
+        .gradient-container {
+            /* Flexbox properties to center content */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-height: 100vh;
+            
+            /* Animated gradient properties */
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient-animation 15s ease infinite;
+        }
+
+        /* Keyframes for the background animation */
+        @keyframes gradient-animation {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .hello-text {
+            font-size: 4.5rem; 
+            font-weight: 700;
+            color: white;
+            letter-spacing: 0.05em; 
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+        }
+
+        @media (min-width: 768px) {
+            .hello-text {
+                font-size: 8rem; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="gradient-container">
+        <h1 class="hello-text">
+            Hello, World!
+        </h1>
+    </main>
+</body>
+</html>
