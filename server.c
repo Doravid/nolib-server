@@ -18,8 +18,6 @@ struct sockaddress_in {
     unsigned char sin_zero[8];
 };
 
-
-
 int sizeOfString(char* string){
     int i = 0;
     while(string[i] != '\0'){
@@ -48,6 +46,11 @@ int isHtmlFile(char* path) {
 
     return dot && areStringEqual(dot, ".html");
 }
+int isIcoFile(char* path) {
+    char* dot = firstPointerToChar(path, '.');
+
+    return dot && areStringEqual(dot, ".ico");
+}
 int print(char* string){
     int size = sizeOfString(string);
     __asm__("mov %rdi, %rsi\n"
@@ -74,17 +77,7 @@ int sendToFd(int output_fd, int input_fd, int size){
     );
 }
 
-int serveFile(char* buffer, int client_fd){
-    char* file = buffer + 5; 
-    *firstPointerToChar(file, ' ') = 0;
-    int opened_file_fd = openPath(file);
-    if(isHtmlFile(file)){
-       char* header = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
-        writeToFd(client_fd, header, sizeOfString(header)); 
-    }
-    sendToFd(client_fd, opened_file_fd, SIZE);
-    return opened_file_fd;
-}
+
 
 void closeFd(int fd){
     __asm__ (
@@ -141,6 +134,22 @@ void setSocketOption(int fd, int level, int optname, const void *optval, int opt
     );
 }
 
+int serveFile(char* buffer, int client_fd){
+    char* file = buffer + 5; 
+    *firstPointerToChar(file, ' ') = 0;
+    int opened_file_fd = openPath(file);
+    if(isHtmlFile(file)){
+        char* header = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
+        writeToFd(client_fd, header, sizeOfString(header)); 
+    }
+    if(isIcoFile(file)){
+        char* header = "HTTP/1.1 200 OK\r\nContent-Type: image/ico\r\n\r\n";
+        writeToFd(client_fd, header, sizeOfString(header)); 
+    }
+    sendToFd(client_fd, opened_file_fd, SIZE);
+    return opened_file_fd;
+}
+
 int main(void){
     char buffer[SIZE];
     int opt = 1;
@@ -148,7 +157,7 @@ int main(void){
 
     int socket_fd = makeSocket(AF_INNET, SOCKET_STREAM, 0);
     if (socket_fd < 0) return socket_fd;
-    struct sockaddress_in addr = {AF_INNET, 0x2823, 0};
+    struct sockaddress_in addr = {AF_INNET, 0x2823/*port 9000*/, 0};
 
     
     setSocketOption(socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -157,17 +166,15 @@ int main(void){
         return -1;
     }
     listenPort(socket_fd, 5);
+    print("Server started, now accepting requests\n");
     while(1){
         int client_fd = acceptRequest(socket_fd, 0, 0);
         receive(client_fd, buffer, SIZE);
-        print(buffer);
         int ret_fd = serveFile(buffer, client_fd);
 
         print("Sent a file!\n");
-        
         closeFd(ret_fd);
         closeFd(client_fd);
-        
     }
     closeFd(socket_fd);
 }
